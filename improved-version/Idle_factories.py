@@ -1,4 +1,5 @@
 
+import pickledb
 import pyxel
 import os
 from random import randint
@@ -18,57 +19,39 @@ statut = "main"
 data_name_list = ["factory_lvl_1 : ", "factory_lvl_2 : ",
                   "factory_lvl_3 : ", "factory_lvl_4 : ", "factory_lvl_5 : ", "factory_lvl_6 : ", "money : ", "gems : ", "levels : ", "nb_clicks : ", "next_level : "]
 
-if os.path.exists("sauvegarde.txt"):
+if os.path.exists("sauvegarde.db"):
 
-    with open("sauvegarde.txt", "r") as sauvegarde:
-        donnees = [elt.strip() for elt in sauvegarde]
-    list_of_factories = []
-    for ind in range(6):
-
-        temp = (donnees[ind].replace(data_name_list[ind], "")).split("/")
-
-        if temp[0] == "True":
-            temp[0] = True
-        else:
-            temp[0] = False
-
-        for ind in range(1, 7):
-            temp[ind] = float(temp[ind])
-
-        list_of_factories.append(temp)
-
-    factory_lvl_1 = list_of_factories[0]
-    factory_lvl_2 = list_of_factories[1]
-    factory_lvl_3 = list_of_factories[2]
-    factory_lvl_4 = list_of_factories[3]
-    factory_lvl_5 = list_of_factories[4]
-    factory_lvl_6 = list_of_factories[5]
-    money = int(float(donnees[6].replace(data_name_list[6], "")))
-    gems = int(donnees[7].replace(data_name_list[7], ""))
-    levels = int(donnees[8].replace(data_name_list[8], ""))
-    nb_clicks = int(donnees[9].replace(data_name_list[9], ""))
-    next_level = int(float(donnees[10].replace(data_name_list[10], "")))
+# Data recovery
+    data = pickledb.load('sauvegarde.db', True)
     
-else:
-    with open("sauvegarde.txt", "w") as sauvegarde:
-        sauvegarde.write(
-            "factory_lvl_1 : False/100/1.1/1/0/18/22\nfactory_lvl_2 : False/1000/1.25/2/0/101/22\nfactory_lvl_3 : False/5000/1.40/5/0/10/64\n")
-        sauvegarde.write(
-            "factory_lvl_4 : False/10000/1.5/10/0/60/50\nfactory_lvl_5 : False/25000/1.7/50/0/35/91\nfactory_lvl_6 : False/100000/1.75/200/0/77/91\n")
-        sauvegarde.write(
-            "money : 10\ngems : 5\nlevels : 1\nnb_clicks : 0\nnext_level : 10")
-        
-    factory_lvl_1 = [False, 100, 1.1, 1, 0, 18, 22]
+    # Factories
+    factory_lvl_1 = data.get("factory_lvl_1")
+    factory_lvl_2 = data.get("factory_lvl_2")
+    factory_lvl_3 = data.get("factory_lvl_3")
+    factory_lvl_4 = data.get("factory_lvl_4")
+    factory_lvl_5 = data.get("factory_lvl_5")
+    factory_lvl_6 = data.get("factory_lvl_6")
+    
+    # Others data
+    money = int(data.get("money"))
+    gems = int(data.get("gems"))
+    levels = int(data.get("levels"))
+    nb_clicks = int(data.get("nb_clicks"))
+    next_level = int(data.get("next_level"))
+    progression = int(data.get("progression"))
+    
+else:        
+    factory_lvl_1 = [False,100,1.1,1,0,18,22]
 
-    factory_lvl_2 = [False, 1000, 1.25, 2, 0, 101, 22]
+    factory_lvl_2 = [False,1000,1.25,2,0,101,22]
 
-    factory_lvl_3 = [False, 5000, 1.40, 5, 0, 10, 64]
+    factory_lvl_3 = [False,5000,1.40,5,0,10,64]
 
-    factory_lvl_4 = [False, 10000, 1.5, 10, 0, 60, 50]
+    factory_lvl_4 = [False,10000,1.5,10,0,60,50]
 
-    factory_lvl_5 = [False, 25000, 1.7, 50, 0, 35, 91]
+    factory_lvl_5 = [False,25000,1.7,50,0,35,91]
 
-    factory_lvl_6 = [False, 100000, 1.75, 200, 0, 77, 91]
+    factory_lvl_6 = [False,100000,1.75,200,0,77,91]
 
     money = 10
 
@@ -220,7 +203,7 @@ def shops(boost_lightning, x2, statut, gems):
 
 def update():
 
-    global factories_list, money, mouse_x, mouse_y, levels, gems, nb_clicks, next_level, progression, statut, afficher, nb_factory, locked_factories_list, boost_lightning, x2, seconds_lightning, seconds_x2
+    global data, factories_list, money, mouse_x, mouse_y, levels, gems, nb_clicks, next_level, progression, statut, afficher, nb_factory, locked_factories_list, boost_lightning, x2, seconds_lightning, seconds_x2
     mouse_x = pyxel.mouse_x
     mouse_y = pyxel.mouse_y
 
@@ -261,31 +244,32 @@ def update():
         if pyxel.frame_count % 60 == 0:
             money = factories(money, x2)
 
+# Save's part (it save the party every seconds)
     if pyxel.frame_count % 60 == 0:
-        with open("sauvegarde.txt", "w") as sauvegarde:
-            for ind1, data in enumerate(data_name_list):
-                if ind1 < 6:
-                    sauvegarde.write(data)
-                    for ind2 in range(len(factories_list[ind1])-1):
-                        sauvegarde.write(str(factories_list[ind1][ind2]))
-                        sauvegarde.write("/")
-                    sauvegarde.write(str(factories_list[ind1][len(factories_list)]))
-                    sauvegarde.write("\n")
-            sauvegarde.write(data_name_list[6])
-            sauvegarde.write(str(money))
-            sauvegarde.write("\n")
-            sauvegarde.write(data_name_list[7])
-            sauvegarde.write(str(gems))
-            sauvegarde.write("\n")
-            sauvegarde.write(data_name_list[8])
-            sauvegarde.write(str(levels))
-            sauvegarde.write("\n")
-            sauvegarde.write(data_name_list[9])
-            sauvegarde.write(str(nb_clicks))
-            sauvegarde.write("\n")
-            sauvegarde.write(data_name_list[10])
-            sauvegarde.write(str(next_level))
-            sauvegarde.write("\n")
+        data = pickledb.load('sauvegarde.db', True)
+        
+        # Factories
+        data.lcreate('factory_lvl_1')
+        data.lcreate('factory_lvl_2')
+        data.lcreate('factory_lvl_3')
+        data.lcreate('factory_lvl_4')
+        data.lcreate('factory_lvl_5')
+        data.lcreate('factory_lvl_6')
+        data.lextend('factory_lvl_1', factory_lvl_1)
+        data.lextend('factory_lvl_2', factory_lvl_2)
+        data.lextend('factory_lvl_3', factory_lvl_3)
+        data.lextend('factory_lvl_4', factory_lvl_4)
+        data.lextend('factory_lvl_5', factory_lvl_5)
+        data.lextend('factory_lvl_6', factory_lvl_6)
+
+        # Others data
+        data.set('money',str(int(money)))
+        data.set('gems',str(int(gems)))
+        data.set('levels',str(int(levels)))
+        data.set('nb_clicks',str(int(nb_clicks)))
+        data.set('next_level',str(int(next_level)))
+        data.set('progression',str(int(progression)))
+
     return None
 
 
