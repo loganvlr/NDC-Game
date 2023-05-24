@@ -7,23 +7,15 @@ from random import randint
 
 pyxel.init(128, 128, title="Idle Factories", fps=60)
 pyxel.load("Idle_factories.pyxres")
-
 pyxel.mouse(True)
-
-# unlock or not, price, multiplicator of lvl up, money per sec, lvl of factory, pos x, pos y
-
-statut = "main"
 
 # ==================== Save ====================
 
-data_name_list = ["factory_lvl_1 : ", "factory_lvl_2 : ",
-                  "factory_lvl_3 : ", "factory_lvl_4 : ", "factory_lvl_5 : ", "factory_lvl_6 : ", "money : ", "gems : ", "levels : ", "nb_clicks : ", "next_level : "]
-
 if os.path.exists("sauvegarde.db"):
 
-# Data recovery
+    # Data recovery
     data = pickledb.load('sauvegarde.db', True)
-    
+
     # Factories
     factory_lvl_1 = data.get("factory_lvl_1")
     factory_lvl_2 = data.get("factory_lvl_2")
@@ -31,7 +23,7 @@ if os.path.exists("sauvegarde.db"):
     factory_lvl_4 = data.get("factory_lvl_4")
     factory_lvl_5 = data.get("factory_lvl_5")
     factory_lvl_6 = data.get("factory_lvl_6")
-    
+
     # Others data
     money = int(data.get("money"))
     gems = int(data.get("gems"))
@@ -39,46 +31,30 @@ if os.path.exists("sauvegarde.db"):
     nb_clicks = int(data.get("nb_clicks"))
     next_level = int(data.get("next_level"))
     progression = int(data.get("progression"))
-    
-else:        
-    factory_lvl_1 = [False,100,1.1,1,0,18,22]
 
-    factory_lvl_2 = [False,1000,1.25,2,0,101,22]
+else:
+    # Data initialisation
 
-    factory_lvl_3 = [False,5000,1.40,5,0,10,64]
+    # Factories
+    # Unlocked or not, Price to buy/upgrade, Multiplicator of price to upgrade, Money produced per seconds, Level of factory (max = 30), Position X, Position Y
+    factory_lvl_1 = [False, 100, 1.1, 1, 0, 18, 22]
+    factory_lvl_2 = [False, 1000, 1.25, 2, 0, 101, 22]
+    factory_lvl_3 = [False, 5000, 1.40, 5, 0, 10, 64]
+    factory_lvl_4 = [False, 10000, 1.5, 10, 0, 60, 50]
+    factory_lvl_5 = [False, 25000, 1.7, 50, 0, 35, 91]
+    factory_lvl_6 = [False, 100000, 1.75, 200, 0, 77, 91]
 
-    factory_lvl_4 = [False,10000,1.5,10,0,60,50]
-
-    factory_lvl_5 = [False,25000,1.7,50,0,35,91]
-
-    factory_lvl_6 = [False,100000,1.75,200,0,77,91]
-
+    # Others data
     money = 10
-
     gems = 5
-
     levels = 1
-
     nb_clicks = 0
-
     next_level = 10
-
     progression = 0
 
-    mouse_x = 0
-
-    mouse_y = 0
-
-factories_list = [factory_lvl_1, factory_lvl_2,
-                  factory_lvl_3, factory_lvl_4, factory_lvl_5, factory_lvl_6]
-
-# postion_x, posiition_y
-table_craft = [42, 46]
-
-shop = [104, 48]
-
 # ==================== Boost's Part ====================
-# Activated/Pos_x/Pos_y
+
+# Activated, Position X, Position Y
 boost_lightning = [False, 73, 81]
 x2 = [False, 25, 81]
 
@@ -86,12 +62,24 @@ x2 = [False, 25, 81]
 seconds_lightning = 0
 seconds_x2 = 0
 
-# Exit
-# Pos_x/Pos_y
-exit_pos = [105, 81]
+# ==================== Others variables ====================
+# Position X, Position Y
+farm_factory = [42, 46]
+shop = [104, 48]
+exit_shop = [105, 81]
+factories_list = [factory_lvl_1, factory_lvl_2,
+                  factory_lvl_3, factory_lvl_4, factory_lvl_5, factory_lvl_6]
+statut = "main"
 
 
 def over():
+    """This function checks if the mouse cursor is hovering over one of the factories.
+    If so, it returns True and the factory number. If not, it returns False with the factory number (the latter will not be used).
+
+    Returns:
+        bool : True if mouse cursor is hovering a factory, False if not.
+        int : number of the factory (unused if mouse cursor isn't hovering a factory).
+    """
     for nb_factory, factory in enumerate(factories_list):
         if mouse_x > factory[5] and mouse_x < factory[5] + 22 and mouse_y > factory[6] and mouse_y < factory[6] + 22:
             return True, nb_factory
@@ -100,39 +88,60 @@ def over():
 
 
 def factories(money, x2):
+    """This function adds the money produced by the different factories to the money already obtained.
 
+    Args:
+        money (int): money already obtained.
+        x2 (tuple): contain a bool (True if activated, False if not), and the position X and Y in the menu (unused here).
+
+    Returns:
+        int: total money owned.
+    """
     for factory in factories_list:
+        # If factory unlocked
         if factory[0]:
+            # If boost activated
             if x2[0]:
-                money = money + ((factory[3] * factory[4]) * 2)
+                money = money + ((factory[3] * factory[4]) * 2) # Money already obtained + ((money earned when factory is level 1 * level of the factory) * 2 for the boost)
             else:
-                money = money + (factory[3] * factory[4])
+                money = money + (factory[3] * factory[4]) # Money already obtained + (money earned when factory is level 1 * level of the factory)
     return money
 
 
 def buy_upgrade_factories(money):
+    """This function allows you to buy a factory, or to improve it if you have already bought it before.
 
+    Args:
+        money (int): the money is necessary to know if we have enough money to buy/improve the factory or not.
+
+    Returns:
+        int: money after bought something or not.
+    """
     if pyxel.btnr(pyxel.MOUSE_BUTTON_LEFT):
-        for factory in factories_list:
+        hovering, nb_factory = over()
+        
+        if hovering:
+            factory_hovered = factories_list[nb_factory]
+            
+            if not factory_hovered[0] and money >= factory_hovered[1]:
+                
+                money = money - factory_hovered[1]
+                factory_hovered[1] = int(factory_hovered[1] * factory_hovered[2])
+                factory_hovered[0] = True
+                factory_hovered[4] = factory_hovered[4] + 1
 
-            if mouse_x > factory[5] and mouse_x < factory[5] + 22 and mouse_y > factory[6] and mouse_y < factory[6] + 22:
-                if not factory[0] and money >= factory[1]:
-                    money = money - factory[1]
-                    factory[1] = int(factory[1] * factory[2])
-                    factory[0] = True
-                    factory[4] = factory[4] + 1
-
-                elif money >= factory[1] and factory[4] < 30:
-                    money = money - factory[1]
-                    factory[1] = int(factory[1] * factory[2])
-                    factory[4] = factory[4] + 1
+            elif money >= factory_hovered[1] and factory_hovered[4] < 30:
+                
+                money = money - factory_hovered[1]
+                factory_hovered[1] = int(factory_hovered[1] * factory_hovered[2])
+                factory_hovered[4] = factory_hovered[4] + 1
     return money
 
 
 def manual_money(money, levels, gems, nb_clicks, next_level):
 
     if pyxel.btnr(pyxel.MOUSE_BUTTON_LEFT):
-        if mouse_x > table_craft[0] and mouse_x < table_craft[0] + 16 and mouse_y > table_craft[1] and mouse_y < table_craft[1] + 16:
+        if mouse_x > farm_factory[0] and mouse_x < farm_factory[0] + 16 and mouse_y > farm_factory[1] and mouse_y < farm_factory[1] + 16:
             proba_gems = randint(0, 100)
 
             if proba_gems < 3:
@@ -193,7 +202,7 @@ def shops(boost_lightning, x2, statut, gems):
         boost_lightning[0] = True
         gems = gems - 10
 
-    elif pyxel.btnr(pyxel.MOUSE_BUTTON_LEFT) and mouse_x > exit_pos[0] and mouse_x < exit_pos[0] + 13 and mouse_y > exit_pos[1] and mouse_y < exit_pos[1] + 13:
+    elif pyxel.btnr(pyxel.MOUSE_BUTTON_LEFT) and mouse_x > exit_shop[0] and mouse_x < exit_shop[0] + 13 and mouse_y > exit_shop[1] and mouse_y < exit_shop[1] + 13:
         statut = "main"
 
     return boost_lightning, x2, statut, gems
@@ -247,7 +256,7 @@ def update():
 # Save's part (it save the party every seconds)
     if pyxel.frame_count % 60 == 0:
         data = pickledb.load('sauvegarde.db', True)
-        
+
         # Factories
         data.lcreate('factory_lvl_1')
         data.lcreate('factory_lvl_2')
@@ -263,12 +272,12 @@ def update():
         data.lextend('factory_lvl_6', factory_lvl_6)
 
         # Others data
-        data.set('money',str(int(money)))
-        data.set('gems',str(int(gems)))
-        data.set('levels',str(int(levels)))
-        data.set('nb_clicks',str(int(nb_clicks)))
-        data.set('next_level',str(int(next_level)))
-        data.set('progression',str(int(progression)))
+        data.set('money', str(int(money)))
+        data.set('gems', str(int(gems)))
+        data.set('levels', str(int(levels)))
+        data.set('nb_clicks', str(int(nb_clicks)))
+        data.set('next_level', str(int(next_level)))
+        data.set('progression', str(int(progression)))
 
     return None
 
@@ -276,8 +285,6 @@ def update():
 # ____________________________________________________
 def draw():
     pyxel.cls(0)
-    
-
 
     if statut == "main":
         pyxel.blt(0, 0, 1, 0, 0, 128, 128)
