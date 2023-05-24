@@ -45,7 +45,7 @@ else:
     factory_lvl_6 = [False, 100000, 1.75, 200, 0, 77, 91]
 
     # Others data
-    money = 10
+    money = 10000
     gems = 5
     levels = 1
     nb_clicks = 0
@@ -69,7 +69,7 @@ shop = [104, 48]
 exit_shop = [105, 81]
 factories_list = [factory_lvl_1, factory_lvl_2,
                   factory_lvl_3, factory_lvl_4, factory_lvl_5, factory_lvl_6]
-statut = "main"
+status = "main"
 
 
 def over():
@@ -123,31 +123,45 @@ def buy_upgrade_factories(money):
         if hovering:
             factory_hovered = factories_list[nb_factory]
             
+            # If the factory is not unlocked
             if not factory_hovered[0] and money >= factory_hovered[1]:
-                
-                money = money - factory_hovered[1]
-                factory_hovered[1] = int(factory_hovered[1] * factory_hovered[2])
                 factory_hovered[0] = True
-                factory_hovered[4] = factory_hovered[4] + 1
 
-            elif money >= factory_hovered[1] and factory_hovered[4] < 30:
-                
+            if money >= factory_hovered[1]:
                 money = money - factory_hovered[1]
+                
+                # Increases the cost of the improvement
                 factory_hovered[1] = int(factory_hovered[1] * factory_hovered[2])
+                
+                # Increase the level of the factory
                 factory_hovered[4] = factory_hovered[4] + 1
     return money
 
 
 def manual_money(money, levels, gems, nb_clicks, next_level):
+    """This function allows you to manage the money farm with mouse clicks on the farm factory, the levels up, and gems generation too.
 
+    Args:
+        money (int): we take the variable money to add the generated money to it.
+        levels (int): to level up.
+        gems (int): for the random generation of gems.
+        nb_clicks (int): number of clicks made since the beginning of the last level.
+        next_level (int): number of clicks needed to next level.
+
+    Returns:
+        int: to update all the variables imported in this function.
+    """
     if pyxel.btnr(pyxel.MOUSE_BUTTON_LEFT):
         if mouse_x > farm_factory[0] and mouse_x < farm_factory[0] + 16 and mouse_y > farm_factory[1] and mouse_y < farm_factory[1] + 16:
+            
+            # 5% of chance to get a gem on click
             proba_gems = randint(0, 100)
-
-            if proba_gems < 3:
+            if proba_gems < 5:
                 gems = gems + 1
 
+            # Per exemple, if level 5, then 5 of money earned
             money = money + (1 * levels)
+            
             nb_clicks = nb_clicks + 1
             levels, next_level, nb_clicks = upgrade_levels(
                 nb_clicks, levels, next_level)
@@ -155,45 +169,70 @@ def manual_money(money, levels, gems, nb_clicks, next_level):
     return money, levels, gems, nb_clicks, next_level
 
 
-def locked_factories(factories_list):
-
-    locked_factories_list = []
-
-    for nb_factory, factory in enumerate(factories_list):
-
-        if not factory[0]:
-            locked_factories_list.append(nb_factory)
-
-    return locked_factories_list
-
-
 def upgrade_levels(nb_clicks, levels, next_level):
+    """This function allows to detect if the upper level is reached or not.
 
+    Args:
+        nb_clicks (int): number of clicks made since the beginning of the last level.
+        levels (int): to level up.
+        next_level (int): number of clicks needed to next level.
+
+    Returns:
+        int: to update all the variables imported in this function.
+    """
     if nb_clicks >= next_level:
         levels = levels + 1
         nb_clicks = 0
-        next_level = next_level * 1.5
+        
+        # The number of clicks needed to reach the next level increase that the experience is more difficult
+        next_level = next_level * 1.2
 
     return levels, next_level, nb_clicks
 
 
-def crossbar_level(nb_clicks, next_level):
+def level_bar(nb_clicks, next_level):
+    """This function is intended to set the display of the level bar.
 
+    Args:
+        nb_clicks (int): number of clicks made since the beginning of the last level.
+        next_level (int): number of clicks needed to next level.
+
+    Returns:
+        int: a value to 0 to 50 for show the progression of the level
+    """
+    # 50 is the numebr of pixel of level bar display
     progression = 50 * nb_clicks/next_level
 
     return progression
 
 
-def enter_shop(statut):
+def enter_shop(status):
+    """This function detect when a click is made on the shop. If yes, we set status to "shop" to activate the shop display, all the shop function, etc.
 
+    Args:
+        status (str): actual status, where we are. 
+
+    Returns:
+        str: the status shop if clicked, actual status if not
+    """
     if pyxel.btnr(pyxel.MOUSE_BUTTON_LEFT) and mouse_x > shop[0] and mouse_x < shop[0] + 24 and mouse_y > shop[1] and mouse_y < shop[1] + 16:
-        statut = "shop"
+        status = "shop"
 
-    return statut
+    return status
 
 
-def shops(boost_lightning, x2, statut, gems):
+def shops(boost_lightning, x2, status, gems):
+    """This function is activated when the status is set on "shop". We can buy some boosts, or leave the shop.
 
+    Args:
+        boost_lightning (tuple): contain a bool (True if activated, False if not), and the position X and Y in the menu.
+        x2 (tuple): contain a bool (True if activated, False if not), and the position X and Y in the menu.
+        status (str): actual status, where we are.
+        gems (int): to verify if we have enought gems to buy some boosts
+
+    Returns:
+        tuple, tuple, str, int: to update all the variables imported in this function.
+    """
     if pyxel.btnr(pyxel.MOUSE_BUTTON_LEFT) and mouse_x > x2[1] and mouse_x < x2[1] + 13 and mouse_y > x2[2] and mouse_y < x2[2] + 13 and gems >= 10 and not x2[0]:
         x2[0] = True
         gems = gems - 10
@@ -203,48 +242,53 @@ def shops(boost_lightning, x2, statut, gems):
         gems = gems - 10
 
     elif pyxel.btnr(pyxel.MOUSE_BUTTON_LEFT) and mouse_x > exit_shop[0] and mouse_x < exit_shop[0] + 13 and mouse_y > exit_shop[1] and mouse_y < exit_shop[1] + 13:
-        statut = "main"
+        status = "main"
 
-    return boost_lightning, x2, statut, gems
+    return boost_lightning, x2, status, gems
 
-# ____________________________________________________
-
+# ==================== Upgate functions (Pyxel package) ====================
 
 def update():
 
-    global data, factories_list, money, mouse_x, mouse_y, levels, gems, nb_clicks, next_level, progression, statut, afficher, nb_factory, locked_factories_list, boost_lightning, x2, seconds_lightning, seconds_x2
+    global data, factories_list, money, mouse_x, mouse_y, levels, gems, nb_clicks, next_level, progression, status, show, nb_factory, boost_lightning, x2, seconds_lightning, seconds_x2
     mouse_x = pyxel.mouse_x
     mouse_y = pyxel.mouse_y
 
-    if statut == "main":
+    if status == "main":
         money = buy_upgrade_factories(money)
         money, levels, gems, nb_clicks, next_level = manual_money(
             money, levels, gems, nb_clicks, next_level)
-        progression = crossbar_level(nb_clicks, next_level)
-        statut = enter_shop(statut)
-        afficher, nb_factory = over()
-        locked_factories_list = locked_factories(factories_list)
+        progression = level_bar(nb_clicks, next_level)
+        status = enter_shop(status)
+        show, nb_factory = over()
 
-    elif statut == "shop":
-        boost_lightning, x2, statut, gems = shops(
-            boost_lightning, x2, statut, gems)
+    elif status == "shop":
+        boost_lightning, x2, status, gems = shops(
+            boost_lightning, x2, status, gems)
 
     # Countdown in seconds of boosts if activated
 
     if x2[0]:
+        
+        # 5 seconds of boost
         if seconds_x2 < 5:
             if pyxel.frame_count % 60 == 0:
                 seconds_x2 = seconds_x2 + 1
+
         else:
             x2[0] = False
             seconds_x2 = 0
 
     if boost_lightning[0]:
+        # Divides by 2 the time necessary for the production of money by the factories
         if pyxel.frame_count % 30 == 0:
             money = factories(money, x2)
+            
+        # 15 seconds of boost
         if seconds_lightning < 15:
             if pyxel.frame_count % 60 == 0:
                 seconds_lightning = seconds_lightning + 1
+
         else:
             boost_lightning[0] = False
             seconds_lightning = 0
@@ -284,17 +328,19 @@ def update():
 
 # ____________________________________________________
 def draw():
+    # Erase all the display
     pyxel.cls(0)
 
-    if statut == "main":
+    # Display the map and all the informations (all factories informations when hovered)
+    if status == "main":
         pyxel.blt(0, 0, 1, 0, 0, 128, 128)
 
-        # crossbar
+        # Level bar
         pyxel.rectb(70, 17, 52, 3, 13)
         pyxel.rect(71, 18, progression, 1, 11)
 
-        # levels factories
-        if afficher and factories_list[nb_factory][0]:
+        # Factory levels if hovered and factory unlocked
+        if show and factories_list[nb_factory][0]:
 
             pyxel.circ(factories_list[nb_factory][5] + 11,
                        factories_list[nb_factory][6] + 13, 8, 13)
@@ -318,7 +364,8 @@ def draw():
                     pyxel.text(factories_list[nb_factory][5] + 8, factories_list[nb_factory]
                                [6] + 10, str(int(factories_list[nb_factory][4])), 0)
 
-        elif afficher and not factories_list[nb_factory][0] and factories_list[nb_factory][1] > money:
+        # Padlock locked if factory hovered but factory is locked and not enought money to buy it
+        elif show and not factories_list[nb_factory][0] and factories_list[nb_factory][1] > money:
 
             pyxel.circ(factories_list[nb_factory][5] + 11,
                        factories_list[nb_factory][6] + 13, 8, 13)
@@ -327,7 +374,8 @@ def draw():
             pyxel.blt(factories_list[nb_factory][5] + 8,
                       factories_list[nb_factory][6] + 8, 1, 129, 0, 7, 9)
 
-        elif afficher and not factories_list[nb_factory][0] and factories_list[nb_factory][1] <= money:
+        # Padlock open if factory hovered but factory is locked and enought money to buy it
+        elif show and not factories_list[nb_factory][0] and factories_list[nb_factory][1] <= money:
 
             pyxel.circ(factories_list[nb_factory][5] + 11,
                        factories_list[nb_factory][6] + 13, 8, 13)
@@ -335,15 +383,17 @@ def draw():
                        factories_list[nb_factory][6] + 12, 8, 7)
             pyxel.blt(factories_list[nb_factory][5] + 8,
                       factories_list[nb_factory][6] + 8, 1, 129, 9, 7, 9)
-    elif statut == "shop":
+            
+    # Display the shop menu
+    elif status == "shop":
 
         pyxel.blt(0, 0, 1, 0, 0, 128, 128)
         pyxel.blt(0, 0, 2, 0, 8, 128, 120)
-        # crossbar
+        # Level bar
         pyxel.rectb(70, 12, 52, 3, 13)
         pyxel.rect(71, 13, progression, 1, 11)
 
-    # stats
+    # Stats (money, gems and levels)
     pyxel.text(2, 2, "Money : " + str(int(money)), 2)
     pyxel.text(2, 9, "Gems : " + str(gems), 2)
     pyxel.text(75, 4, "Levels : " + str(levels), 2)
