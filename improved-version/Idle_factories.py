@@ -45,7 +45,7 @@ else:
     factory_lvl_6 = [False, 100000, 1.75, 200, 0, 77, 91]
 
     # Others data
-    money = 10000
+    money = 10
     gems = 5
     levels = 1
     nb_clicks = 0
