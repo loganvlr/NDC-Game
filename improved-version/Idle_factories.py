@@ -17,20 +17,24 @@ if os.path.exists("sauvegarde.db"):
     data = pickledb.load('sauvegarde.db', True)
 
     # Factories
-    factory_lvl_1 = data.get("factory_lvl_1")
-    factory_lvl_2 = data.get("factory_lvl_2")
-    factory_lvl_3 = data.get("factory_lvl_3")
-    factory_lvl_4 = data.get("factory_lvl_4")
-    factory_lvl_5 = data.get("factory_lvl_5")
-    factory_lvl_6 = data.get("factory_lvl_6")
+    factories_list = data.get("factories_list")
+
+    factory_lvl_1 = factories_list[0]
+    factory_lvl_2 = factories_list[1]
+    factory_lvl_3 = factories_list[2]
+    factory_lvl_4 = factories_list[3]
+    factory_lvl_5 = factories_list[4]
+    factory_lvl_6 = factories_list[5]
 
     # Others data
-    money = int(data.get("money"))
-    gems = int(data.get("gems"))
-    levels = int(data.get("levels"))
-    nb_clicks = int(data.get("nb_clicks"))
-    next_level = int(data.get("next_level"))
-    progression = int(data.get("progression"))
+
+    others_data_list = data.get("others_data_list")
+    money = int(others_data_list[0])
+    gems = int(others_data_list[1])
+    levels = int(others_data_list[2])
+    nb_clicks = int(others_data_list[3])
+    next_level = int(others_data_list[4])
+    progression = int(others_data_list[5])
 
 else:
     # Data initialisation
@@ -298,31 +302,16 @@ def update():
             money = factories(money, x2)
 
 # Save's part (it save the party every seconds)
-    if pyxel.frame_count % 60 == 0:
+    if pyxel.frame_count % 300 == 0:
         data = pickledb.load('sauvegarde.db', True)
 
         # Factories
-        data.lcreate('factory_lvl_1')
-        data.lcreate('factory_lvl_2')
-        data.lcreate('factory_lvl_3')
-        data.lcreate('factory_lvl_4')
-        data.lcreate('factory_lvl_5')
-        data.lcreate('factory_lvl_6')
-        data.lextend('factory_lvl_1', factory_lvl_1)
-        data.lextend('factory_lvl_2', factory_lvl_2)
-        data.lextend('factory_lvl_3', factory_lvl_3)
-        data.lextend('factory_lvl_4', factory_lvl_4)
-        data.lextend('factory_lvl_5', factory_lvl_5)
-        data.lextend('factory_lvl_6', factory_lvl_6)
+        factories_list = [factory_lvl_1, factory_lvl_2, factory_lvl_3, factory_lvl_4, factory_lvl_5, factory_lvl_6]
+        data.set('factories_list',factories_list)
 
         # Others data
-        data.set('money', str(int(money)))
-        data.set('gems', str(int(gems)))
-        data.set('levels', str(int(levels)))
-        data.set('nb_clicks', str(int(nb_clicks)))
-        data.set('next_level', str(int(next_level)))
-        data.set('progression', str(int(progression)))
-
+        others_data_list = [str(int(money)), str(int(gems)), str(int(levels)), str(int(nb_clicks)), str(int(next_level)), str(int(progression))]
+        data.set('others_data_list',others_data_list)
     return None
 
 
