@@ -131,7 +131,7 @@ def buy_upgrade_factories(money):
             if not factory_hovered[0] and money >= factory_hovered[1]:
                 factory_hovered[0] = True
 
-            if money >= factory_hovered[1]:
+            if money >= factory_hovered[1] and factory_hovered[4] < 30:
                 money = money - factory_hovered[1]
                 
                 # Increases the cost of the improvement
