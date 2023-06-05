@@ -2,6 +2,7 @@
 import pickledb
 import pygame
 import os
+import time
 from random import randint
 
 
@@ -16,7 +17,8 @@ def click(factories_list, mouse_x, mouse_y, money):
     for nb_factory, factory in enumerate(factories_list):
         if mouse_x > factory[5] and mouse_x < factory[5] + 60 and mouse_y > factory[6] and mouse_y < factory[6] + 60:
             money = buy_upgrade_factories(nb_factory, money)
-    return money
+            return money, True, nb_factory
+    return money, False, nb_factory
 
 
 def factories(money, x2, factories_list):
@@ -218,6 +220,8 @@ color_factory_5 = "yellow"
 color_factory_6 = "cyan"
 color_factory_7 = "black"
 color_list = [color_factory_1, color_factory_2, color_factory_3, color_factory_4, color_factory_5, color_factory_6, color_factory_7]
+factories_clicked = False
+nb_factory = 0
 
 # ==================== MAIN PROGRAM ====================
 
@@ -229,15 +233,25 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.MOUSEBUTTONDOWN:
-            money = click(factories_list, mouse_x, mouse_y, money)
+            money, factories_clicked, nb_factory = click(factories_list, mouse_x, mouse_y, money) # Click on factories or not
             money, levels, gems, nb_clicks, next_level, progression = manual_money(money, levels, gems, nb_clicks, next_level, farm_factory, mouse_x, mouse_y, progression)
     
-    clock.tick(60) # 60 FPS limit
-
+    # When a factory is clicked, its color changes to white
+    if factories_clicked:
+        start_time = time.time()
+        color_temp = color_list[nb_factory]
+        color_list[nb_factory] = "white"
+        factories_clicked = False
+    
+    # The color of the factory returns to its original color after 0.1 seconds
+    if color_list[nb_factory] == "white":
+        if time.time() - start_time > 0.1:
+            color_list[nb_factory] = color_temp
+            
     mouse_x, mouse_y = pygame.mouse.get_pos()
 
-    production += 1
     if production % 60 == 0:
+        # Every 60 frames, the factories produce money
         money = factories(money, x2, factories_list)
         production = 0
         # ==================== Save ====================
@@ -250,12 +264,16 @@ while running:
         # Others data
         others_data_list = [str(int(money)), str(int(gems)), str(int(levels)), str(int(nb_clicks)), str(int(next_level)), str(int(progression))]
         data.set('others_data_list',others_data_list)
+    production += 1
     
+    # ==================== Display ====================
     screen.fill("purple")
+    
     money4 = font.render(str(money), 1, (255, 255, 255))
     gems_text = font.render(str(gems), 1, (255, 255, 255))
     screen.blit(money4, (100, 100))
-    screen.blit(gems_text, (100, 150))
+    screen.blit(gems_text, (100, 150))    
+
     pygame.draw.rect(screen, color_list[0], (10, 10, 60, 60), 60)
     pygame.draw.rect(screen, color_list[1], (80, 10, 60, 60), 60)
     pygame.draw.rect(screen, color_list[2], (150, 10, 60, 60), 60)
@@ -265,4 +283,6 @@ while running:
     pygame.draw.rect(screen, color_list[6], (460, 10, 60, 60), 60)
     pygame.draw.rect(screen, "green", (560, 30, progression, 5), 5)
     pygame.draw.rect(screen, "white", (558, 28, 104, 9), 2)
+    clock.tick(60) # 60 FPS limit
+    
     pygame.display.flip()
